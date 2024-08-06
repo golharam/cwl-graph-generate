@@ -7,9 +7,10 @@ Generates https://view.commonwl.org/ like images, showing a complete workflow in
 ## Example
 
 ```bash
-$ git clone https://github.com/wtsi-hgi/arvados-pipelines
-$ cwl-graph-generate arvados-pipelines/cwl/workflows/gatk-4.0.0.0-haplotypecaller-genotypegvcfs-libraries.cwl > graph
-$ dot -Tpng graph > output.png
+$ CWL_FILE="<insert your favorite cwl workflow>"
+$ docker build -t cwl-graph-generate .
+$ docker run --rm -ti cwl-graph-generate /opt/cwl_graph_generate.py $CWL_FILE > graph
+$ docker run --rm -ti cwl-graph-generate dot -Tpng graph > output.png
 ```
 
 ## Limitations
