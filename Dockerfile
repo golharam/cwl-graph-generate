@@ -1,18 +1,16 @@
 # Use an official Ubuntu as a parent image
-FROM ubuntu:20.04
+FROM python:3.10-slim
 
 # Set the environment to non-interactive for the installation
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Update the package repository and install necessary tools
-RUN apt-get update && apt-get install -y \
-    curl \
-    gnupg \
-    build-essential \
-    software-properties-common
-
-# Install Python
-RUN apt-get install -y python3 python3-pip python3-venv
+RUN apt-get update 
+#&& apt-get install -y \
+#    curl \
+#    gnupg \
+#    build-essential \
+#    software-properties-common
 
 # Install NodeJS
 RUN apt-get install -y nodejs
@@ -40,8 +38,7 @@ RUN pip3 install -r requirements.txt
 # Define the command to run the application (if applicable)
 # CMD ["node", "app.js"]
 
-# Entry point
-COPY cwl_graph_generate.py .
+# Copy in run scripts
+COPY cwl_graph_generate.* .
 
-
-
+ENTRYPOINT [ "/opt/cwl_graph_generate.sh" ]
