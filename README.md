@@ -11,7 +11,7 @@ $ CWL_FILE="<insert your favorite cwl workflow>"
 $ docker build -t cwl-graph-generate .
 # NOTE: The following command assumes the CWL and dependent files are in the current directory or a subdirectory of the current directory.
 $ docker run --rm -ti -v $PWD:$PWD -w $PWD cwl-graph-generate /opt/cwl_graph_generate.py $CWL_FILE > graph
-$ docker run --rm -ti $PWD:$PWD -w $PWD cwl-graph-generate dot -Tpng graph > output.png
+$ docker run --rm -ti -v $PWD:$PWD -w $PWD cwl-graph-generate dot -Tpng graph > output.png
 ```
 
 ## Limitations
