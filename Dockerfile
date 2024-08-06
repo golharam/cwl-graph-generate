@@ -39,6 +39,6 @@ RUN pip3 install -r requirements.txt
 # CMD ["node", "app.js"]
 
 # Copy in run scripts
-COPY cwl_graph_generate.* .
+COPY cwl_graph_generate.* ./
 
 ENTRYPOINT [ "/opt/cwl_graph_generate.sh" ]
