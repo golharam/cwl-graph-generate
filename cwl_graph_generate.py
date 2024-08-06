@@ -9,6 +9,7 @@ from pprint import pprint
 from typing import IO, Any, Dict, Text
 from os import path
 import logging
+from contextlib import redirect_stdout
 
 from cwltool.command_line_tool import CommandLineTool, ExpressionTool
 from cwltool.load_tool import (fetch_document, resolve_tool_uri,
@@ -345,33 +346,36 @@ start = """
         # arrowsize="0.7"
       ];"""
 
-def cwl_viewer_dot(tool_json):
+def cwl_viewer_dot(tool_json, output_graph):
     global indent_level
     global arrows
-    print(textwrap.dedent(start))
-    indent_level = 2
-    get_workflow_dot(tool_json, 1, get_uid())
-    for arrow in arrows:
-        print_indent(arrow)
-    print("}")
+    with open(file=output_graph, mode='w') as output_file:
+        with redirect_stdout(output_file):
+            print(textwrap.dedent(start))
+            indent_level = 2
+            get_workflow_dot(tool_json, 1, get_uid())
+            for arrow in arrows:
+                print_indent(arrow)
+            print("}")
 
 
-def cwl_graph_generate(cwl_path: str):
+def cwl_graph_generate(cwl_path: str, output_graph: str):
     if cwl_path[:5] != "file:":
         cwl_path = f"file://{path.abspath(cwl_path)}"
 
     document_loader, workflowobj, uri = fetch_document(cwl_path)
     document_loader, uri = resolve_and_validate_document(document_loader, workflowobj, uri, preprocess_only=True)
-    loadingContext = LoadingContext()
+    #loadingContext = LoadingContext()
     tool = make_tool(uri, document_loader)
-    cwl_viewer_dot(tool)
+    cwl_viewer_dot(tool, output_graph)
 
 def main():
     parser = argparse.ArgumentParser(__name__)
     parser.add_argument("file_location", help="File location of the CWL workflow to generate")
+    parser.add_argument("output_graph", help="Output graph file")
     args = parser.parse_args()
 
-    cwl_graph_generate(args.file_location)
+    cwl_graph_generate(args.file_location, args.output_graph)
 
 if __name__ == '__main__':
     main()
