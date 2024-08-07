@@ -39,6 +39,9 @@ RUN pip3 install -r requirements.txt
 # CMD ["node", "app.js"]
 
 # Copy in run scripts
-COPY cwl_graph_generate.* ./
+COPY cwl_graph_generate.* .
+
+# Set execute permissions for the Python script and shell script
+RUN chmod +x /opt/cwl_graph_generate.py /opt/cwl_graph_generate.sh
 
 ENTRYPOINT [ "/opt/cwl_graph_generate.sh" ]
