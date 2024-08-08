@@ -17,3 +17,11 @@ $ docker run --rm -ti -v $PWD:$PWD -w $PWD cwl-graph-generate $CWL_FILE
 ## Limitations
 
 This project was created with the sole purpose of creating the graph above, so the code is not written from a standpoint of maintainability or stability.
+
+## Running the Unit Tests
+
+To run all unit tests, you can use the following command:
+
+```sh
+python3 -m unittest discover -s unit_tests
+
