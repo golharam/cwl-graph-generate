@@ -10,6 +10,7 @@ from typing import IO, Any, Dict, Text
 from os import path
 import logging
 from contextlib import redirect_stdout
+import os
 
 from cwltool.command_line_tool import CommandLineTool, ExpressionTool
 from cwltool.load_tool import (fetch_document, resolve_tool_uri,
@@ -111,13 +112,22 @@ def shortname(inputid):
     else:
         return d.path.split(u"/")[-1]
 
-def endId(tool_id, embedded_tool_part):
-    tool_shortname = shortname(tool_id)
-    for x in embedded_tool_part:
-        if tool_shortname == shortname(x["id"]):
-            return x["id"]
+def strip_path(id_string):
+    return os.path.basename(id_string).split('#')[-1]
 
-    raise NotImplementedError()
+def endId(tool_id, embedded_tool_part):
+    print(f"[DEBUG_FIND] Trying to find end ID for tool_id: {strip_path(tool_id)}", file=sys.stderr)
+    available_ids = [strip_path(x['id']) for x in embedded_tool_part]
+    print(f"[DEBUG_AVAIL] Available IDs in embedded_tool_part: {available_ids}", file=sys.stderr)
+    
+    tool_shortname = strip_path(tool_id)
+    for x in embedded_tool_part:
+        if tool_shortname == strip_path(x["id"]):
+            print(f"[DEBUG_MATCH] Match found: {tool_shortname} -> {strip_path(x['id'])}", file=sys.stderr)
+            return x["id"]
+    
+    print(f"[DEBUG_NOMATCH] No match found for {tool_shortname}", file=sys.stderr)
+    return tool_id  # Return the original id instead of raising an error
 
 def get_workflow_dot(tool, repeat_times, workflow_id):
     global drawn_workflows
@@ -136,26 +146,34 @@ def get_workflow_dot(tool, repeat_times, workflow_id):
 
         print_indent(f""""{tu(node_id)}{"" if node_id [0:4] != "file" else ("#" + workflow_id)}" {get_props_str(props)};""")
 
-
     def draw_arrow(source, target, label=None, is_double_arrow=False, source_step=None, **props):
-        if label is not None:
-            props["label"] = f"  {label}  "
-
-        if is_double_arrow:
-            props["arrowhead"] = "normalnormal"
-
-        _logger.debug(f"Output step name “{source_step}”")
-        source_num = ids_by_workflow.get(source_step, ids_by_workflow.get(get_before_hash(source)))
-        target_num = ids_by_workflow.get(get_before_hash(target))
         try:
-            if source[0:4] == "file":
-                assert source_num is not None
-            if target[0:4] == "file":
-                assert target_num is not None
-        except:
-            import pdb; pdb.set_trace()
+            print(f"[DEBUG_ARROW] Drawing arrow from {source} to {target}", file=sys.stderr)
+            if label is not None:
+                props["label"] = f"  {label}  "
 
-        arrows.append(f""""{source}{"" if source_num is None else "#" + str(source_num)}" -> "{target}{"" if target_num is None else "#" + str(target_num)}" {get_props_str(props)};""")
+            if is_double_arrow:
+                props["arrowhead"] = "normalnormal"
+
+            print(f"[DEBUG_ARROW] Output step name '{source_step}'", file=sys.stderr)
+            source_num = ids_by_workflow.get(source_step, ids_by_workflow.get(get_before_hash(source)))
+            target_num = ids_by_workflow.get(get_before_hash(target))
+            
+            print(f"[DEBUG_ARROW] Source num: {source_num}, Target num: {target_num}", file=sys.stderr)
+
+            if source[0:4] == "file" and source_num is None:
+                print(f"[WARNING_ARROW] source_num is None for file-based source: {source}", file=sys.stderr)
+            if target[0:4] == "file" and target_num is None:
+                print(f"[WARNING_ARROW] target_num is None for file-based target: {target}", file=sys.stderr)
+
+            arrow_string = f""""{source}{"" if source_num is None else "#" + str(source_num)}" -> "{target}{"" if target_num is None else "#" + str(target_num)}" {get_props_str(props)};"""
+            print(f"[DEBUG_ARROW] Generated arrow string: {arrow_string}", file=sys.stderr)
+            arrows.append(arrow_string)
+        except Exception as e:
+            print(f"[ERROR_ARROW] Error in draw_arrow: {str(e)}", file=sys.stderr)
+            print(f"[ERROR_ARROW] Source: {source}, Target: {target}, Source step: {source_step}", file=sys.stderr)
+            import traceback
+            traceback.print_exc(file=sys.stderr)
 
     print_indent(f"""subgraph "cluster_{get_end_name(tool.tool["id"])}{get_uid()}" {{""")
     indent_level += 2
@@ -200,7 +218,7 @@ def get_workflow_dot(tool, repeat_times, workflow_id):
             drawing_workflow_id = get_uid()
 
             ids_by_workflow[cwl_step.id] = drawing_workflow_id
-            _logger.debug(f"Adding “{cwl_step.id}”")
+            _logger.debug(f"Adding '{cwl_step.id}'")
             drawn_workflows.add(cwl_step.embedded_tool.tool["id"])
             #workflows_to_draw.append(cwl_step.embedded_tool)
             inner_wf_repeat_times = repeat_times
@@ -312,7 +330,6 @@ def get_workflow_dot(tool, repeat_times, workflow_id):
     indent_level -= 2
     print_indent("}")
 
-
 start = """
     digraph workflow {
       graph [
@@ -379,4 +396,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
