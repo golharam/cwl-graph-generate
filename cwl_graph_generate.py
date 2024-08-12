@@ -112,22 +112,19 @@ def shortname(inputid):
     else:
         return d.path.split(u"/")[-1]
 
-def strip_path(id_string):
-    return os.path.basename(id_string).split('#')[-1]
-
 def endId(tool_id, embedded_tool_part):
-    print(f"[DEBUG_FIND] Trying to find end ID for tool_id: {strip_path(tool_id)}", file=sys.stderr)
-    available_ids = [strip_path(x['id']) for x in embedded_tool_part]
+    print(f"[DEBUG_FIND] Trying to find end ID for tool_id: {shortname(tool_id)}", file=sys.stderr)
+    available_ids = [shortname(x['id']) for x in embedded_tool_part]
     print(f"[DEBUG_AVAIL] Available IDs in embedded_tool_part: {available_ids}", file=sys.stderr)
     
-    tool_shortname = strip_path(tool_id)
+    tool_shortname = shortname(tool_id)
     for x in embedded_tool_part:
-        if tool_shortname == strip_path(x["id"]):
-            print(f"[DEBUG_MATCH] Match found: {tool_shortname} -> {strip_path(x['id'])}", file=sys.stderr)
+        if tool_shortname == shortname(x["id"]):
+            print(f"[DEBUG_MATCH] Match found: {tool_shortname} -> {shortname(x['id'])}", file=sys.stderr)
             return x["id"]
     
     print(f"[DEBUG_NOMATCH] No match found for {tool_shortname}", file=sys.stderr)
-    return tool_id  # Return the original id instead of raising an error
+    return shortname(tool_id)  # Return the original id instead of raising an error
 
 def get_workflow_dot(tool, repeat_times, workflow_id):
     global drawn_workflows
