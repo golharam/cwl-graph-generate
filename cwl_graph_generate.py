@@ -160,8 +160,10 @@ def get_workflow_dot(tool, repeat_times, workflow_id):
 
             if source[0:4] == "file" and source_num is None:
                 print(f"[WARNING_ARROW] source_num is None for file-based source: {source}", file=sys.stderr)
+                return #Skip drawing this arrow
             if target[0:4] == "file" and target_num is None:
                 print(f"[WARNING_ARROW] target_num is None for file-based target: {target}", file=sys.stderr)
+                return #Skip drawing this arrow
 
             arrow_string = f""""{source}{"" if source_num is None else "#" + str(source_num)}" -> "{target}{"" if target_num is None else "#" + str(target_num)}" {get_props_str(props)};"""
             print(f"[DEBUG_ARROW] Generated arrow string: {arrow_string}", file=sys.stderr)
