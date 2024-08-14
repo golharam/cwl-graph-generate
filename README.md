@@ -8,9 +8,9 @@ Generates https://view.commonwl.org/ like images, showing a complete workflow in
 
 ```bash
 $ CWL_FILE="<insert your favorite cwl workflow>"
-$ docker build -t cwl-graph-generate .
+$ docker build -t cwl-graph-generate:latest .
 # This command assumes the CWL and associated files are in the working directory and a subdirectory of the working directory.
-$ docker run --rm -ti -v $PWD:$PWD -w $PWD cwl-graph-generate $CWL_FILE
+$ docker run --rm -ti -v $PWD:$PWD -w $PWD cwl-graph-generate:latest $CWL_FILE
 # The output will be the basename of the $CWL_FILE.png
 ```
 
