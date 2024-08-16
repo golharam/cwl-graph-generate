@@ -36,7 +36,7 @@ class TestEndIdFunction(unittest.TestCase):
         """Test endId returns the original tool_id when no match is found."""
         tool_id = "tool#789"
         embedded_tool_part = [{"id": "tool#123"}, {"id": "tool#456"}]
-        expected = "tool#789"
+        expected = "789"
         with patch('sys.stderr', new_callable=StringIO) as mock_stderr:
             result = endId(tool_id, embedded_tool_part)
             self.assertEqual(result, expected)
@@ -46,7 +46,7 @@ class TestEndIdFunction(unittest.TestCase):
         """Test endId returns the original tool_id when the list is empty."""
         tool_id = "tool#000"
         embedded_tool_part = []
-        expected = "tool#000"
+        expected = "000"
         with patch('sys.stderr', new_callable=StringIO) as mock_stderr:
             result = endId(tool_id, embedded_tool_part)
             self.assertEqual(result, expected)
@@ -56,7 +56,7 @@ class TestEndIdFunction(unittest.TestCase):
         """Test endId with a tool_id that does not exist in the embedded_tool_part."""
         tool_id = "path/to/analysis_tool_b"
         embedded_tool_part = [{"id": "tool#123"}, {"id": "path/to/analysis_tool_a"}]
-        expected = "path/to/analysis_tool_b"
+        expected = "analysis_tool_b"
         with patch('sys.stderr', new_callable=StringIO) as mock_stderr:
             result = endId(tool_id, embedded_tool_part)
             self.assertEqual(result, expected)

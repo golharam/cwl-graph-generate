@@ -5,7 +5,7 @@ import io
 
 """
 Unit Tests for the get_workflow_dot Function (draw_arrow sub-function) in cwl_graph_generate.py
-The function draw_arrow can wait forever without throwing an assertion error due to the use of pdb.set_trace() in the except block. This causes the program to pause execution and wait for user input indefinitely. By removing or modifying the debugger call, the function doesn't enter an indefinite waiting. May be another simple fix can be to remove the pdb call in the except and simply catch the assertion error as follows.  
+The function draw_arrow can wait forever without throwing an assertion error due to the use of pdb.set_trace() in the except block. This causes the program to pause execution and wait for user input indefinitely. By removing or modifying the debugger call, the function doesn't enter an indefinite waiting. May be another simple fix can be to remove the pdb call in the except and simply catch the assertion error as follows.
 
 except AssertionError as e:
         _logger.error(f"Assertion failed: {str(e)}")
@@ -27,9 +27,9 @@ Test Cases:
 3. test_no_warnings_for_non_file_based:
     - Ensures that no warnings are produced for non-file-based inputs and outputs.
 
-4. test_non_halting_behavior:
-    - Ensures that the function completes graph generation without interruption even when warnings are generated.
-    - Verifies that the function continues executing and generating arrows despite warnings, improving reliability.
+4. test_skip_drawing_arrow_for_none_values:
+    - Verifies that arrows are not drawn for file-based inputs/outputs with None nums.
+    - Checks that only one arrow is drawn (the non-conditional one).
 """
 
 # Add the parent directory to the Python path
@@ -98,30 +98,26 @@ class TestWorkflowDot(unittest.TestCase):
         self.assertNotIn("[WARNING_ARROW] source_num is None", output)
         self.assertNotIn("[WARNING_ARROW] target_num is None", output)
 
-    def test_non_halting_behavior(self):
+    def test_skip_drawing_arrow_for_none_values(self):
         tool = self.create_tool("file://input/path", "file://output/path")
         cwl_graph_generate.CommandLineTool = MockCommandLineTool
+        cwl_graph_generate.arrows.clear()  # Ensure arrows list is empty
         
-        try:
-            get_workflow_dot(tool, 1, "test_workflow_id")
-        except Exception as e:
-            self.fail(f"get_workflow_dot raised an exception: {str(e)}")
+        get_workflow_dot(tool, 1, "test_workflow_id")
         
         output = self.held_stderr.getvalue()
         
-        # Check that both warnings were logged
+        # Check that warnings were logged
         self.assertIn("[WARNING_ARROW] source_num is None for file-based source: file://input/path", output)
         self.assertIn("[WARNING_ARROW] target_num is None for file-based target: file://output/path", output)
         
-        # Check for debug messages that indicate the function continued executing
-        self.assertIn("[DEBUG_ARROW] Drawing arrow from file://input/path to value_from_node", output)
-        self.assertIn("[DEBUG_ARROW] Drawing arrow from value_from_node", output)
-        self.assertIn("[DEBUG_ARROW] Drawing arrow from step1 to file://output/path", output)
+        # Check that only the non-file-based arrow was added
+        self.assertEqual(len(cwl_graph_generate.arrows), 1)
+        self.assertTrue(any('value_from_node' in arrow for arrow in cwl_graph_generate.arrows))
         
-        # Check that arrow strings were generated after the warnings
-        self.assertIn('[DEBUG_ARROW] Generated arrow string: "file://input/path" -> "value_from_node', output)
-        self.assertIn('[DEBUG_ARROW] Generated arrow string: "value_from_node', output)
-        self.assertIn('[DEBUG_ARROW] Generated arrow string: "step1" -> "file://output/path"', output)
+        # Check that file-based arrows were not added
+        self.assertFalse(any('file://input/path' in arrow for arrow in cwl_graph_generate.arrows))
+        self.assertFalse(any('file://output/path' in arrow for arrow in cwl_graph_generate.arrows))
 
 if __name__ == '__main__':
     unittest.main()
